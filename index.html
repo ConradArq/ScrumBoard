@@ -1,0 +1,55 @@
+<html>
+<head>
+	<title>Scrum Task Board</title>
+	<link rel="stylesheet" type="text/css" href="Content/bootstrap.min.css"/>
+	<link rel="stylesheet" type="text/css" href="site.css"/>
+</head>
+</html>
+<body>
+	<div class="container well">
+		<div class="row">
+			<div class="col-sm-4 thead"><span>Not Started<span></span></div>
+			<div class="col-sm-4 thead"><span>In Progress</span></div>
+			<div class="col-sm-4 thead"><span>Finished</span></div><a href="#" data-toggle="modal" data-target="#myModal"><span class="glyphicon glyphicon-plus"></span></a><a href="#" onclick="removeTask()"><span class="glyphicon glyphicon-trash"></span></a><a href="#" onclick="filterTask()"><span class="glyphicon glyphicon-filter"></span></a>
+		</div>
+		<div class="row tbody well">
+			<div class="col-sm-4">
+				<div class="col-sm-2"><div class="description"></div><div class="personName"></div><div class="hours"></div></div>
+				<div class="col-sm-2"></div>
+				<div class="col-sm-2"></div>
+				<div class="col-sm-2"></div>
+				<div class="col-sm-2"></div>
+			</div>
+			<div class="col-sm-4">bb</div>
+			<div class="col-sm-4">cc</div>
+		</div>
+		<footer></footer>
+	</div>
+
+<!-- Modal -->
+<div id="myModal" class="modal fade" role="dialog">
+  <div class="modal-dialog">
+
+    <!-- Modal content-->
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+        <h4 class="modal-title">Add a new task</h4>
+      </div>
+      <div class="modal-body">
+        <textarea rows="2" placeholder="Task description..." class="form-control"></textarea>
+        <input type="text" placeholder="Assigned to..."class="form-control"/>
+        <input type="text" placeholder="Hours needed for completion"class="form-control"/>
+      </div>
+      <div class="modal-footer">
+      	<button type="button" class="btn btn-primary" data-dismiss="modal"onclick="addTask()">Add</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+	<script src="Scripts/jquery-2.1.3.min.js"></script>
+	<script src="Scripts/bootstrap.min.js"></script>
+	<script src="script.js"></script
+</body>

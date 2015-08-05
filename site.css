@@ -1,0 +1,84 @@
+html{
+	font-size:62.5%;
+}
+.well{
+	padding:0;
+}
+.container{
+	width: 100%;
+	margin: 1vh 0;
+	height:98vh;
+}
+.container>.row:nth-of-type(1){
+	height:8%;
+	margin-bottom:0;
+	background-color: rgb(144,144,144);
+	-ms-display:flex;
+	display:flex;
+	-ms-align-items:center;
+	align-items:center;
+	-webkit-justify-content: right;
+	-moz-justify-content: right;
+	-ms-justify-content: right;
+	-o-justify-content: right;
+	justify-content: flex-end;
+	border-radius:3px;
+}
+.row span.glyphicon{
+	font-size:2em;
+	color:white;
+	margin-right:0.8em;
+}
+.thead:nth-child(3){
+	margin-right:-8.4em;
+}
+.row{
+	margin: 0 0;
+	height:10%;
+	-ms-display:flex;
+	display:flex;
+	-ms-align-items:flex-end;
+	align-items:flex-end;
+}
+.thead{
+	text-align: center;
+	padding:1px;
+	font-weight:bold;
+	display:table-cell;
+	vertical-align: bottom;
+}
+.thead>span{
+	font-size:1.3em;
+	font-style:italic;
+}
+.tbody{
+	height:92%;
+	border:1px solid lightgrey;
+}
+.tbody.well{
+	padding:.5%;
+}
+.tbody .col-sm-4{
+	height:98%;
+	border-right:1px solid lightgrey;
+}
+.tbody .col-sm-4:nth-child(3){
+	border:0;
+}
+.tbody .col-sm-4 .col-sm-2{
+	margin:1%;
+	height:10%;
+	width:48%;
+	background-color:green;
+	border:1px solid black;
+}
+.tbody .col-sm-4 .col-sm-2:nth-child(even){
+	background-color:blue;
+}
+input,textarea{
+	margin:3px;
+}
+.modal-content{
+	width:60%;
+	margin:auto;
+}
