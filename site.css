@@ -29,6 +29,12 @@ html{
 	color:white;
 	margin-right:0.8em;
 }
+.description .glyphicon.glyphicon-pencil{
+	font-size:1em;
+}
+.description .glyphicon.glyphicon-pencil:hover{
+	cursor: hand;
+}
 .thead:nth-child(3){
 	margin-right:-8.4em;
 }
@@ -67,10 +73,16 @@ html{
 }
 .tbody .col-sm-4 .col-sm-2{
 	margin:1%;
-	height:10%;
+	padding:0 1%;
+	min-height:14%;
 	width:48%;
 	background-color:green;
 	border:1px solid black;
+	word-wrap:break-word;
+	font-family:sans-serif;
+}
+.description{
+	font-weight:bold;
 }
 .tbody .col-sm-4 .col-sm-2:nth-child(even){
 	background-color:blue;
