@@ -1,12 +1,21 @@
-var Task=function(description,personName,hours,state){
+var Task=function(description,personName,hours){
 	this.description=description;
 	this.personName=personName;
 	this.hours=hours;
+}
+var TaskStarted=function(description,personName,hours,percentageCompleted,hoursSpent){
+	Task.call(this,description,personName,hours);
+	this.percentageCompleted=percentageCompleted;
+	this.hoursSpent=hoursSpent;
+	this.getDiff=function(){
+		return hours-hoursSpent;
+	}
 }
 var tasksNotStarted=[];
 var tasksStarted=[];
 var tasksFinished=[];
 var firebase="https://myscrumboard.firebaseio.com/";
+var taskDragged;
 
 var crud=function(method,data,url,callback){
 	var req = new XMLHttpRequest();
@@ -34,9 +43,13 @@ function displayTask(task,col,nTasks){
 	else
 	    childIndex=elem.children().get().length;
 
-	var htmlString='<div class="col-sm-2" draggable="true"><div class="description">'+task.description+' <span class="glyphicon glyphicon-pencil" onclick="editTask(this,'+childIndex+','+col+')"></span></div><div class="personName">Assigned to: <span>'+task.personName+'</span></div><div class="hours">Estimated hours: <span>'+task.hours+'</span></div></div>';
+	var htmlString='<div class="col-sm-2" draggable="true"><div class="description"><span>'+task.description+' </span><span class="glyphicon glyphicon-pencil" onclick="editTask(this,'+childIndex+','+col+')"></span></div><div class="personName">Assigned to: <span>'+task.personName+'</span></div><div class="hours">Estimated hours: <span>'+task.hours+'</span></div>';
+	if(col==2)
+		htmlString+='<div class="hoursSpend"><span>'+task.hoursSpent+'</span></div>'+'<div class="progressionBar"><span>'+task.percentageCompleted+'</span></div>';
+	htmlString+='</div>'
 	elem.append(htmlString);
 	elem.children().last().get(0).addEventListener("dragstart", function(event) {
+		taskDragged=this;
 	    event.dataTransfer.setData("index", childIndex);
 	    event.target.style.opacity = "0.5";
 	    event.dataTransfer.setData("col", col);
@@ -76,22 +89,8 @@ function getTasks(){
 	crud('GET','',firebase,callback);
 }
 
-(function init(){
+function init(){
 	getTasks();
-	var elem=$('.tbody .col-sm-4');
-		for (var i = 0; i < elem.length; i++) {
-			var children=elem.children();
-			for (var j = 0; j < children.length; j++) {
-				children.get(j).addEventListener("dragstart", function(event) {
-			    	event.dataTransfer.setData("index", j);
-			    	event.dataTransfer.setData("col", i+1);
-			    	event.target.style.opacity = "0.5";
-				});
-				children.get(0).addEventListener("dragend", function(event) {
-			    	event.target.style.opacity = "1";
-				});
-			};
-		};
 
 	var t=$('.glyphicon-trash').get(0);
 	t.addEventListener("dragover", function(event) {
@@ -100,7 +99,21 @@ function getTasks(){
 	t.addEventListener("drop",function(e){
 		removeTask(e);
 	});
-})();
+	var cols=$('.tbody .col-sm-4').get();
+	for(var i=0;i<cols.length;i++){
+		cols[i].addEventListener("dragover", function(event) {
+	    	event.preventDefault();
+		});
+		cols[i].addEventListener("drop",(function(j){
+				return function(e){
+							removeTask(e);
+							addTask(j+1);
+							}
+			})(i));
+	}
+};
+
+init();
 
 function resetModal(){
 	$('.modal-title').text("Add a new task"); 
@@ -119,19 +132,39 @@ function resetModal(){
 	});
 })();
 
-function addTask(){
-	var inputFields=$('.form-control').get();
-	var newTask=new Task(inputFields[0].value,inputFields[1].value,inputFields[2].value,"notStarted");
-	inputFields[0].value='';inputFields[1].value='';inputFields[2].value='';
-
+function addTask(col){
+	var newTask;
+	if(!col){
+		var col=1;
+		var inputFields=$('.form-control').get();
+		newTask=new Task(inputFields[0].value,inputFields[1].value,inputFields[2].value);
+		inputFields[0].value='';inputFields[1].value='';inputFields[2].value='';
+	}else{
+		var taskDescription=$(taskDragged).find(".description>span").text();
+		var taskPersonName=$(taskDragged).find(".personName>span").text();
+		var taskHours=$(taskDragged).find(".hours>span").text();
+		if(col==2)
+			newTask=new TaskStarted(taskDescription,taskPersonName,taskHours,0,0);
+		else
+			newTask=new Task(taskDescription,taskPersonName,taskHours);
+	}
 	function callback(response){
 
 		newTask._id = response.name;
-		tasksNotStarted.push(newTask);
-		displayTask(newTask,1);
+		if (col==1){
+			tasksNotStarted.push(newTask);
+		}
+		if (col==2){
+			tasksStarted.push(newTask);
+		}
+		if (col==3){
+			tasksFinished.push(newTask);
+		}		
+		
+		displayTask(newTask,col);
 	}
-
-	crud('POST',newTask,firebase+'Not_Started',callback);	
+	var taskState=(col==1)?"Not_Started":(col==2)?"Started":"Finished";
+	crud('POST',newTask,firebase+taskState,callback);	
 }
 
 function removeTask(event){
@@ -144,9 +177,20 @@ function removeTask(event){
 			tasksStarted.splice(i,1);
 		if(col==3)
 			tasksFinished.splice(i,1);
-		var elem=$('.tbody .col-sm-4:nth-child('+col+')').children(':nth-child('+(parseInt(i)+1)+')').remove();
-	}
+		$('.tbody .col-sm-4:nth-child('+col+')').children(':nth-child('+(parseInt(i)+1)+')').remove();
 
+		$('.tbody .col-sm-4:nth-child('+col+')').children().each(function(index){
+			$(this).find(".description>span").attr("onclick","editTask(this,"+index+","+col+")");
+			$(this).get(0).addEventListener("dragstart", function(event) {
+		    	event.dataTransfer.setData("index", index);
+		    	event.dataTransfer.setData("col", col);
+		    	event.target.style.opacity = "0.5";
+			});
+		});
+
+	}
+	console.log(i);
+	console.log(tasksStarted);
 	switch(col){
 		case "1": crud('DELETE','',firebase+"Not_Started/"+tasksNotStarted[i]._id+'/',callback); break;
 		case "2": crud('DELETE','',firebase+"Started/"+tasksStarted[i]._id+'/',callback); break;
@@ -154,44 +198,50 @@ function removeTask(event){
 	}
 }
 
-function editTask(task,index,col,desc,pers,hours){
+function editTask(task,index,col){
 
 	if((btn=$('.modal-footer>button:first-child')).filter('[onclick*="editTask"]').get().length==0){
+	
+		var taskDescription=$(task).parent().get(0).firstChild.innerHTML;
+		var taskPersonName=$(task).parent().next().children().first().get(0).innerHTML;
+		var taskHours=$(task).parent().nextAll().eq(1).children().first().get(0).innerHTML;		
 
-		var taskDescription=$(task).parent().get(0).firstChild;
-		var taskPersonName=$(task).parent().next().children().first().get(0);
-		var taskHours=$(task).parent().nextAll().eq(1).children().first().get(0);
-		console.log(taskDescription.nodeValue);
 		$('.modal-title').text("Edit task");
-		btn.attr("onclick","editTask(null,"+index+","+col+","+(taskDescription.nodeValue||null)+","
-			+(taskPersonName.innerHTML||null)+","+(taskHours.innerHTML||null)+")").html("Edit");
+		btn.attr("onclick","editTask('',"+index+","+col+")").html("Edit");
+
+		$('.modal-body>textarea').val(taskDescription);
+		$('.modal-body>input:first').val(taskPersonName);
+		$('.modal-body>input:last').val(taskHours);
 
 		$('#myModal').modal('toggle');
-		console.log($('.modal-body>textarea'));
-		$('.modal-body>textarea').html(taskDescription.nodeValue);
-		$('.modal-body>input:first').val(taskPersonName.innerHTML);
-		$('.modal-body>input:last').val(taskHours.innerHTML);
 
 	}else{
-		resetModal();
+		var target=$('.tbody>.col-sm-4:eq('+(col-1)+')>:eq('+index+')');
+		var taskDescription=target.find(".description>span").get(0);
+		var taskPersonName=target.find(".personName>span").get(0);
+		var taskHours=target.find(".hours>span").get(0);
+
 		var inputFields=$('.form-control').get();
 		var description=inputFields[0].value; var personName=inputFields[1].value; var hours=inputFields[2].value;
 		var newTask=new Task(description,personName,hours);
+
+		resetModal();
+
 		function callback(response){
 			if(col==1){
-				tasksNotStarted[index].description=desc=description;
-				tasksNotStarted[index].personName=pers=personName;
-				tasksNotStarted[index].hours=hours=hours;	
+				tasksNotStarted[index].description=taskDescription.innerHTML=description;
+				tasksNotStarted[index].personName=taskPersonName.innerHTML=personName;
+				tasksNotStarted[index].hours=taskHours.innerHTML=hours;	
 			}
 			if(col==2){
-				tasksStarted[index].description=description;
-				tasksStarted[index].personName=personName;
-				tasksStarted[index].hours=hours;
+				tasksStarted[index].description=taskDescription.innerHTML=description;
+				tasksStarted[index].personName=taskPersonName.innerHTML=personName;
+				tasksStarted[index].hours=taskHours.innerHTML=hours;
 			}
 			if(col==3){
-				tasksFinished[index].description=description;
-				tasksFinished[index].personName=personName;
-				tasksFinished[index].hours=hours;
+				tasksFinished[index].description=taskDescription.textContent=description;
+				tasksFinished[index].personName=taskPersonName.textContent=personName;
+				tasksFinished[index].hours=taskHours.textContent=hours;
 			}
 		}
 		switch(col){
