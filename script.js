@@ -7,9 +7,11 @@ var TaskStarted=function(description,personName,hours,percentageCompleted,hoursS
 	Task.call(this,description,personName,hours);
 	this.percentageCompleted=percentageCompleted;
 	this.hoursSpent=hoursSpent;
-	this.getDiff=function(){
-		return hours-hoursSpent;
-	}
+}
+var TaskFinished=function(description,personName,hours,hoursSpent){
+	Task.call(this,description,personName,hours);
+	this.hoursSpent=hoursSpent;
+	this.hoursDiff=this.hours-this.hoursSpent;
 }
 var tasksNotStarted=[];
 var tasksStarted=[];
@@ -45,7 +47,9 @@ function displayTask(task,col,nTasks){
 
 	var htmlString='<div class="col-sm-2" draggable="true"><div class="description"><span>'+task.description+' </span><span class="glyphicon glyphicon-pencil" onclick="editTask(this,'+childIndex+','+col+')"></span></div><div class="personName">Assigned to: <span>'+task.personName+'</span></div><div class="hours">Estimated hours: <span>'+task.hours+'</span></div>';
 	if(col==2)
-		htmlString+='<div class="hoursSpend"><span>'+task.hoursSpent+'</span></div>'+'<div class="progressionBar"><span>'+task.percentageCompleted+'</span></div>';
+		htmlString+='<div class="hoursSpent">Hours spent:<span>'+task.hoursSpent+'</span></div>'+'<div class="progress"><div class="progress-bar progress-bar-striped active percentageCompleted" role="progressbar" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100" style="width:'+task.percentageCompleted+'%"><span>'+task.percentageCompleted+'%</span></div></div>';
+	if(col==3)
+		htmlString='<div class="col-sm-2" draggable="true"><div class="description"><span>'+task.description+'</span></div><div class="personName">Assigned to: <span>'+task.personName+'</span></div><div class="hours">Estimated hours: <span>'+task.hours+'</span></div><div class="hoursSpent">Total hours spent:<span>'+task.hoursSpent+'</span></div>'+'<div class="hoursDiff">&#8710; <span>'+task.hoursDiff+' hours</span></div>';
 	htmlString+='</div>'
 	elem.append(htmlString);
 	elem.children().last().get(0).addEventListener("dragstart", function(event) {
@@ -118,6 +122,9 @@ init();
 function resetModal(){
 	$('.modal-title').text("Add a new task"); 
 	$('.modal-footer>button:first-child').attr("onclick","addTask()").html("Add");
+	if($('.modal-body>input:nth-child(4)').get(0)){
+		$('.modal-body>input:last').remove();$('.modal-body>input:last').remove();$('.modal-body>input:last').css("display","initial");
+	}
 	var inputFields=$('.form-control').get();
 	inputFields[0].value='';inputFields[1].value='';inputFields[2].value='';
 	$('#myModal').modal('toggle');
@@ -134,19 +141,22 @@ function resetModal(){
 
 function addTask(col){
 	var newTask;
-	if(!col){
+	if(!col){ //Add a new task
 		var col=1;
 		var inputFields=$('.form-control').get();
 		newTask=new Task(inputFields[0].value,inputFields[1].value,inputFields[2].value);
 		inputFields[0].value='';inputFields[1].value='';inputFields[2].value='';
-	}else{
+	}else{ //Move task from one column to another
 		var taskDescription=$(taskDragged).find(".description>span").text();
 		var taskPersonName=$(taskDragged).find(".personName>span").text();
 		var taskHours=$(taskDragged).find(".hours>span").text();
+		var taskPercentageCompleted=$(taskDragged).find(".percentageCompleted>span").text();
+		var taskHoursSpent=$(taskDragged).find(".hoursSpent>span").text();
 		if(col==2)
-			newTask=new TaskStarted(taskDescription,taskPersonName,taskHours,0,0);
+			newTask=new TaskStarted(taskDescription,taskPersonName,taskHours,taskPercentageCompleted||0,taskHoursSpent||0);
 		else
-			newTask=new Task(taskDescription,taskPersonName,taskHours);
+			newTask=new TaskFinished(taskDescription,taskPersonName,taskHours,taskHoursSpent);
+
 	}
 	function callback(response){
 
@@ -189,8 +199,6 @@ function removeTask(event){
 		});
 
 	}
-	console.log(i);
-	console.log(tasksStarted);
 	switch(col){
 		case "1": crud('DELETE','',firebase+"Not_Started/"+tasksNotStarted[i]._id+'/',callback); break;
 		case "2": crud('DELETE','',firebase+"Started/"+tasksStarted[i]._id+'/',callback); break;
@@ -200,6 +208,7 @@ function removeTask(event){
 
 function editTask(task,index,col){
 
+	//change add modal to edit modal when clicking on the pencil on the task
 	if((btn=$('.modal-footer>button:first-child')).filter('[onclick*="editTask"]').get().length==0){
 	
 		var taskDescription=$(task).parent().get(0).firstChild.innerHTML;
@@ -211,10 +220,20 @@ function editTask(task,index,col){
 
 		$('.modal-body>textarea').val(taskDescription);
 		$('.modal-body>input:first').val(taskPersonName);
-		$('.modal-body>input:last').val(taskHours);
+		$('.modal-body>input:nth-child(2)').val(taskHours);
+
+		if(col==2){
+			var taskPercentageCompleted=$(task).parent().nextAll().eq(2).children().first().get(0).innerHTML;	
+			var taskHoursSpent=$(task).parent().nextAll().last().children().first().children().first().get(0).innerHTML;	
+			$('.modal-body>input:last').css("display","none");
+			$('.modal-body').append('<input type="text" placeholder="Hours spent..."class="form-control"/>');
+			$('.modal-body').append('<input type="text" placeholder="Percentage completed..."class="form-control"/>');
+			$('.modal-body>input:nth-child(3)').val(taskHoursSpent);
+			$('.modal-body>input:last').val(taskPercentageCompleted);		
+		}
 
 		$('#myModal').modal('toggle');
-
+	//save changes when clicking on edit on the modal
 	}else{
 		var target=$('.tbody>.col-sm-4:eq('+(col-1)+')>:eq('+index+')');
 		var taskDescription=target.find(".description>span").get(0);
@@ -223,8 +242,18 @@ function editTask(task,index,col){
 
 		var inputFields=$('.form-control').get();
 		var description=inputFields[0].value; var personName=inputFields[1].value; var hours=inputFields[2].value;
-		var newTask=new Task(description,personName,hours);
-
+		
+		var newTask;
+		if(col==1)
+			newTask=new Task(description,personName,hours);
+		if(col==2){
+			var taskPercentageCompleted=target.find(".hoursSpent>span").get(0);
+			var taskHoursSpent=target.find(".progress-bar>span").get(0);
+			var percentageCompleted=inputFields[3].value;var hoursSpent=inputFields[4].value;
+			newTask=new TaskStarted(description,personName,hours,percentageCompleted,hoursSpent);
+		}
+		console.log($('.modal-footer>button:first-child').filter('[onclick*="editTask"]').get());
+		alert(1);
 		resetModal();
 
 		function callback(response){
@@ -237,17 +266,13 @@ function editTask(task,index,col){
 				tasksStarted[index].description=taskDescription.innerHTML=description;
 				tasksStarted[index].personName=taskPersonName.innerHTML=personName;
 				tasksStarted[index].hours=taskHours.innerHTML=hours;
-			}
-			if(col==3){
-				tasksFinished[index].description=taskDescription.textContent=description;
-				tasksFinished[index].personName=taskPersonName.textContent=personName;
-				tasksFinished[index].hours=taskHours.textContent=hours;
+				tasksStarted[index].percentageCompleted=taskPercentageCompleted.innerHTML=percentageCompleted;
+				tasksStarted[index].hoursSpent=taskHoursSpent.innerHTML=hoursSpent;
 			}
 		}
 		switch(col){
 			case 1: crud('PUT',newTask,firebase+"Not_Started/"+tasksNotStarted[index]._id+'/',callback); break;
 			case 2: crud('PUT',newTask,firebase+"Started/"+tasksStarted[index]._id+'/',callback); break;
-			case 3: crud('PUT',newTask,firebase+"Finished/"+tasksFinished[index]._id+'/',callback); break;
 		}
 	}
 	

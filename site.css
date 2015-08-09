@@ -94,3 +94,11 @@ input,textarea{
 	width:60%;
 	margin:auto;
 }
+.progress{
+	height:11px;
+	margin-bottom:5px;
+}
+.progress-bar>span{
+	display:block;
+	margin-top:-4px;
+}
