@@ -24,10 +24,31 @@ html{
 	justify-content: flex-end;
 	border-radius:3px;
 }
+.row{
+	position:relative;
+}
+.popover-title,.popover-content{
+	text-align:center;
+	position:relative;
+}
 .row span.glyphicon{
 	font-size:2em;
 	color:white;
 	margin-right:0.8em;
+}
+.row span.glyphicon.glyphicon-search{
+	font-size:initial;
+	margin-right:0;
+}
+.row span.glyphicon.glyphicon-remove{
+	color:grey;
+	font-size: 1em;
+	position:absolute;
+	left:1;
+	top:84%;
+}
+.row span.glyphicon.glyphicon-remove:hover{
+	cursor:hand;
 }
 .description .glyphicon.glyphicon-pencil{
 	font-size:1em;

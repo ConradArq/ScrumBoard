@@ -10,7 +10,8 @@
 		<div class="row">
 			<div class="col-sm-4 thead"><span>Not Started<span></span></div>
 			<div class="col-sm-4 thead"><span>In Progress</span></div>
-			<div class="col-sm-4 thead"><span>Finished</span></div><a href="#" data-toggle="modal" data-target="#myModal"><span class="glyphicon glyphicon-plus"></span></a><span class="glyphicon glyphicon-trash"></span><a href="#" onclick="filterTask()"><span class="glyphicon glyphicon-filter"></span></a>
+			<div class="col-sm-4 thead"><span>Finished</span></div><a href="#" data-toggle="modal" data-target="#myModal"><span class="glyphicon glyphicon-plus"></span></a><span class="glyphicon glyphicon-trash"></span><span class="glyphicon glyphicon-filter" data-toggle="popover" data-placement="bottom"></span>
+			
 		</div>
 		<div class="row tbody well">
 			<div class="col-sm-4">
@@ -28,13 +29,16 @@
     <!-- Modal content-->
     <div class="modal-content">
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal">&times;</button>
+        <button type="button" class="close" data-dismiss="modal" onclick="resetModal()">&times;</button>
         <h4 class="modal-title">Add a new task</h4>
       </div>
       <div class="modal-body">
-        <textarea rows="2" placeholder="Task description..." class="form-control"></textarea>
-        <input type="text" placeholder="Assigned to..."class="form-control"/>
-        <input type="text" placeholder="Hours needed for completion"class="form-control"/>
+        <label for="description">Brief description of the task:</label>
+        <textarea rows="2" placeholder="Task description..." id="description" class="form-control"></textarea>
+        <label for="personName">Person in charge of completing the task:</label>
+        <input type="text" placeholder="Assigned to..." id="personName" class="form-control"/>
+        <label for="hours">Estimated hours needed to complete the task:</label>
+        <input type="text" placeholder="Hours needed for completion" id="hours" class="form-control"/>
       </div>
       <div class="modal-footer">
       	<button type="button" class="btn btn-primary" data-dismiss="modal" onclick="addTask()">Add</button>

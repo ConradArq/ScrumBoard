@@ -11,7 +11,7 @@ var TaskStarted=function(description,personName,hours,percentageCompleted,hoursS
 var TaskFinished=function(description,personName,hours,hoursSpent){
 	Task.call(this,description,personName,hours);
 	this.hoursSpent=hoursSpent;
-	this.hoursDiff=this.hours-this.hoursSpent;
+	this.hoursDiff=this.hoursSpent-this.hours;
 }
 var tasksNotStarted=[];
 var tasksStarted=[];
@@ -47,9 +47,9 @@ function displayTask(task,col,nTasks){
 
 	var htmlString='<div class="col-sm-2" draggable="true"><div class="description"><span>'+task.description+' </span><span class="glyphicon glyphicon-pencil" onclick="editTask(this,'+childIndex+','+col+')"></span></div><div class="personName">Assigned to: <span>'+task.personName+'</span></div><div class="hours">Estimated hours: <span>'+task.hours+'</span></div>';
 	if(col==2)
-		htmlString+='<div class="hoursSpent">Hours spent:<span>'+task.hoursSpent+'</span></div>'+'<div class="progress"><div class="progress-bar progress-bar-striped active percentageCompleted" role="progressbar" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100" style="width:'+task.percentageCompleted+'%"><span>'+task.percentageCompleted+'%</span></div></div>';
+		htmlString+='<div class="hoursSpent">Hours spent: <span>'+task.hoursSpent+'</span></div>'+'<div class="progress"><div class="progress-bar progress-bar-striped active percentageCompleted" role="progressbar" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100" style="width:'+task.percentageCompleted+'%"><span>'+task.percentageCompleted+'<span>%</span></span></div></div>';
 	if(col==3)
-		htmlString='<div class="col-sm-2" draggable="true"><div class="description"><span>'+task.description+'</span></div><div class="personName">Assigned to: <span>'+task.personName+'</span></div><div class="hours">Estimated hours: <span>'+task.hours+'</span></div><div class="hoursSpent">Total hours spent:<span>'+task.hoursSpent+'</span></div>'+'<div class="hoursDiff">&#8710; <span>'+task.hoursDiff+' hours</span></div>';
+		htmlString='<div class="col-sm-2" draggable="true"><div class="description"><span>'+task.description+'</span></div><div class="personName">Assigned to: <span>'+task.personName+'</span></div><div class="hours">Estimated hours: <span>'+task.hours+'</span></div><div class="hoursSpent">Total hours spent: <span>'+task.hoursSpent+'</span></div>'+'<div class="hoursDiff">&#8710; <span>'+task.hoursDiff+' hours</span></div>';
 	htmlString+='</div>'
 	elem.append(htmlString);
 	elem.children().last().get(0).addEventListener("dragstart", function(event) {
@@ -63,12 +63,16 @@ function displayTask(task,col,nTasks){
 	});	
 }
 
-function getTasks(){
+function getTasks(queryString){
 	function callback(res){
+		tasksNotStarted.length=0;tasksStarted.length=0;tasksFinished.length=0;
+		$('.tbody .col-sm-4').html("");
 		for(var prop in res) {
 			var nTasks=0;
 			for(var p in res[prop]){
 				var task=res[prop][p];
+				if(queryString&&!(~task.description.indexOf(queryString)||~task.personName.indexOf(queryString)))
+					continue;
 				task._id=p;
 				var col;
 				if(prop=="Not_Started"){
@@ -94,6 +98,18 @@ function getTasks(){
 }
 
 function init(){
+	
+	$(document).ready(function(){
+    	$('[data-toggle="popover"]').popover({
+    		html:true,
+    		animation:true,
+    		title: "Find task by person's name / description's keyword(s)",
+    		content: '<input class="form-control" <!--style="width:240px-->" type="text"/><button class="btn btn-info" type="button" onclick="filterTask()"><span class="glyphicon glyphicon-search"></span> Search</button><span onclick="closePopOver()" class="glyphicon glyphicon-remove"></span>'
+    	}).on("hide.bs.popover",function(){
+    		getTasks();
+    	});
+	});
+
 	getTasks();
 
 	var t=$('.glyphicon-trash').get(0);
@@ -119,11 +135,16 @@ function init(){
 
 init();
 
+function closePopOver(){
+	$("[data-toggle='popover']").popover('hide');
+}
+
 function resetModal(){
 	$('.modal-title').text("Add a new task"); 
 	$('.modal-footer>button:first-child').attr("onclick","addTask()").html("Add");
-	if($('.modal-body>input:nth-child(4)').get(0)){
-		$('.modal-body>input:last').remove();$('.modal-body>input:last').remove();$('.modal-body>input:last').css("display","initial");
+	if($('.modal-body>select').get(0)){
+		$('.modal-body>input:last').remove();$('.modal-body>select').remove();$('.modal-body>input:last').css("display","initial");
+		$('.modal-body>label:last').remove();$('.modal-body>label:last').remove();$('.modal-body>label:last').css("display","initial");
 	}
 	var inputFields=$('.form-control').get();
 	inputFields[0].value='';inputFields[1].value='';inputFields[2].value='';
@@ -150,11 +171,13 @@ function addTask(col){
 		var taskDescription=$(taskDragged).find(".description>span").text();
 		var taskPersonName=$(taskDragged).find(".personName>span").text();
 		var taskHours=$(taskDragged).find(".hours>span").text();
-		var taskPercentageCompleted=$(taskDragged).find(".percentageCompleted>span").text();
+		var taskPercentageCompleted=$(taskDragged).find(".percentageCompleted>span").contents().filter(function(){return this.nodeType==3}).text();
 		var taskHoursSpent=$(taskDragged).find(".hoursSpent>span").text();
+		if(col==1)
+			newTask=new Task(taskDescription,taskPersonName,taskHours);
 		if(col==2)
 			newTask=new TaskStarted(taskDescription,taskPersonName,taskHours,taskPercentageCompleted||0,taskHoursSpent||0);
-		else
+		if(col==3)
 			newTask=new TaskFinished(taskDescription,taskPersonName,taskHours,taskHoursSpent);
 
 	}
@@ -187,14 +210,18 @@ function removeTask(event){
 			tasksStarted.splice(i,1);
 		if(col==3)
 			tasksFinished.splice(i,1);
-		$('.tbody .col-sm-4:nth-child('+col+')').children(':nth-child('+(parseInt(i)+1)+')').remove();
+		console.log(tasksStarted);
+		console.log(tasksFinished);
+		$('.tbody .col-sm-4:nth-child('+col+')').children(':nth-child('+(parseInt(i)+1)+')').fadeOut(function(){
+			$('.tbody .col-sm-4:nth-child('+col+')').children(':nth-child('+(parseInt(i)+1)+')').remove();
 
-		$('.tbody .col-sm-4:nth-child('+col+')').children().each(function(index){
-			$(this).find(".description>span").attr("onclick","editTask(this,"+index+","+col+")");
-			$(this).get(0).addEventListener("dragstart", function(event) {
-		    	event.dataTransfer.setData("index", index);
-		    	event.dataTransfer.setData("col", col);
-		    	event.target.style.opacity = "0.5";
+			$('.tbody .col-sm-4:nth-child('+col+')').children().each(function(index){
+				$(this).find(".description>span").attr("onclick","editTask(this,"+index+","+col+")");
+				$(this).get(0).addEventListener("dragstart", function(event) {
+			    	event.dataTransfer.setData("index", index);
+			    	event.dataTransfer.setData("col", col);
+			    	event.target.style.opacity = "0.5";
+				});
 			});
 		});
 
@@ -220,16 +247,17 @@ function editTask(task,index,col){
 
 		$('.modal-body>textarea').val(taskDescription);
 		$('.modal-body>input:first').val(taskPersonName);
-		$('.modal-body>input:nth-child(2)').val(taskHours);
+		$('.modal-body>input:eq(1)').val(taskHours);
 
 		if(col==2){
-			var taskPercentageCompleted=$(task).parent().nextAll().eq(2).children().first().get(0).innerHTML;	
-			var taskHoursSpent=$(task).parent().nextAll().last().children().first().children().first().get(0).innerHTML;	
+			var taskHoursSpent=$(task).parent().nextAll().eq(2).children().first().get(0).innerHTML;	
+			var taskPercentageCompleted=$(task).parent().nextAll().last().children().first().children().first().contents().first().get(0).nodeValue;	
 			$('.modal-body>input:last').css("display","none");
-			$('.modal-body').append('<input type="text" placeholder="Hours spent..."class="form-control"/>');
-			$('.modal-body').append('<input type="text" placeholder="Percentage completed..."class="form-control"/>');
-			$('.modal-body>input:nth-child(3)').val(taskHoursSpent);
-			$('.modal-body>input:last').val(taskPercentageCompleted);		
+			$('.modal-body>label:eq(2)').css("display","none");
+			$('.modal-body').append('<label for="hoursSpent">Hours spent working on the task:</label><input type="text" placeholder="Hours spent..." id="hoursSpent" class="form-control"/>');
+			$('.modal-body').append('<label for="sel1">Select % completed:</label><select class="form-control" id="sel1"><option>10</option><option>20</option><option>30</option><option>40</option><option>50</option><option>60</option><option>70</option><option>80</option><option>90</option><option>100</option></select>');
+			$('.modal-body>input:eq(2)').val(taskHoursSpent);
+			$('.modal-body>select').val(taskPercentageCompleted);
 		}
 
 		$('#myModal').modal('toggle');
@@ -247,13 +275,12 @@ function editTask(task,index,col){
 		if(col==1)
 			newTask=new Task(description,personName,hours);
 		if(col==2){
-			var taskPercentageCompleted=target.find(".hoursSpent>span").get(0);
-			var taskHoursSpent=target.find(".progress-bar>span").get(0);
-			var percentageCompleted=inputFields[3].value;var hoursSpent=inputFields[4].value;
+			var taskPercentageCompleted=target.find(".percentageCompleted>span").get(0);
+			var taskPercentageCompletedDiv=target.find(".percentageCompleted");
+			var taskHoursSpent=target.find(".hoursSpent>span").get(0);
+			var hoursSpent=inputFields[3].value;var percentageCompleted=inputFields[4].value;
 			newTask=new TaskStarted(description,personName,hours,percentageCompleted,hoursSpent);
 		}
-		console.log($('.modal-footer>button:first-child').filter('[onclick*="editTask"]').get());
-		alert(1);
 		resetModal();
 
 		function callback(response){
@@ -266,7 +293,9 @@ function editTask(task,index,col){
 				tasksStarted[index].description=taskDescription.innerHTML=description;
 				tasksStarted[index].personName=taskPersonName.innerHTML=personName;
 				tasksStarted[index].hours=taskHours.innerHTML=hours;
-				tasksStarted[index].percentageCompleted=taskPercentageCompleted.innerHTML=percentageCompleted;
+				tasksStarted[index].percentageCompleted=percentageCompleted;
+				taskPercentageCompleted.childNodes[0].nodeValue=percentageCompleted;
+				taskPercentageCompletedDiv.css("width",percentageCompleted+"%");
 				tasksStarted[index].hoursSpent=taskHoursSpent.innerHTML=hoursSpent;
 			}
 		}
@@ -279,5 +308,5 @@ function editTask(task,index,col){
 }
 
 function filterTask(){
-	
+	getTasks($('.popover-content>input').val());
 }
