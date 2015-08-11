@@ -73,6 +73,7 @@ html{
 	font-weight:bold;
 	display:table-cell;
 	vertical-align: bottom;
+	color:white;
 }
 .thead>span{
 	font-size:1.3em;
@@ -101,12 +102,33 @@ html{
 	border:1px solid black;
 	word-wrap:break-word;
 	font-family:sans-serif;
+	border-radius:15px;
+	box-shadow: 3px 3px 5px #888888;
+	font-style:italic;
+}
+.tbody .col-sm-4 .col-sm-2 span{
+	font-style:normal;
 }
 .description{
 	font-weight:bold;
 }
-.tbody .col-sm-4 .col-sm-2:nth-child(even){
-	background-color:blue;
+.tbody .col-sm-4:nth-child(1) .col-sm-2{
+	background: -webkit-linear-gradient(#FF3232,#FAE6E6);
+    background: -o-linear-gradient(#FF3232,#FAE6E6);
+    background: -moz-linear-gradient(#FF3232,#FAE6E6);
+	background: linear-gradient(#FF3232,#FAE6E6);
+}
+.tbody .col-sm-4:nth-child(2) .col-sm-2{
+	background: -webkit-linear-gradient(#FFD736,#FFFAE6);
+    background: -o-linear-gradient(#FFD736,#FFFAE6);
+    background: -moz-linear-gradient(#FFD736,#FFFAE6);
+	background: linear-gradient(#FFD736,#FFFAE6);
+}
+.tbody .col-sm-4:nth-child(3) .col-sm-2{
+	background: -webkit-linear-gradient(#48B76D,#E6F5EB);
+    background: -o-linear-gradient(#48B76D,#E6F5EB);
+    background: -moz-linear-gradient(#48B76D,#E6F5EB);
+	background: linear-gradient(#48B76D,#E6F5EB);
 }
 input,textarea{
 	margin:3px;

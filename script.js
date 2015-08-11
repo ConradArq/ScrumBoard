@@ -49,7 +49,7 @@ function displayTask(task,col,nTasks){
 	if(col==2)
 		htmlString+='<div class="hoursSpent">Hours spent: <span>'+task.hoursSpent+'</span></div>'+'<div class="progress"><div class="progress-bar progress-bar-striped active percentageCompleted" role="progressbar" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100" style="width:'+task.percentageCompleted+'%"><span>'+task.percentageCompleted+'<span>%</span></span></div></div>';
 	if(col==3)
-		htmlString='<div class="col-sm-2" draggable="true"><div class="description"><span>'+task.description+'</span></div><div class="personName">Assigned to: <span>'+task.personName+'</span></div><div class="hours">Estimated hours: <span>'+task.hours+'</span></div><div class="hoursSpent">Total hours spent: <span>'+task.hoursSpent+'</span></div>'+'<div class="hoursDiff">&#8710; <span>'+task.hoursDiff+' hours</span></div>';
+		htmlString='<div class="col-sm-2" draggable="true"><div class="description"><span>'+task.description+'</span></div><div class="personName">Assigned to: <span>'+task.personName+'</span></div><div class="hours">Estimated hours: <span>'+task.hours+'</span></div><div class="hoursSpent">Total hours spent: <span>'+task.hoursSpent+'</span></div>'+'<div class="hoursDiff">&nbsp;&#8710; <span>'+(task.hoursDiff>0?"+":"")+task.hoursDiff+' hours</span></div>';
 	htmlString+='</div>'
 	elem.append(htmlString);
 	elem.children().last().get(0).addEventListener("dragstart", function(event) {
