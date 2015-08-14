@@ -80,7 +80,7 @@ function getTasks(queryString){
 			var nTasks=0;
 			for(var p in res[prop]){
 				var task=res[prop][p];
-				if(queryString&&!(~task.description.indexOf(queryString)||~task.personName.indexOf(queryString)))
+				if(queryString&&!(~task.description.toLowerCase().indexOf(queryString.toLowerCase())||~task.personName.toLowerCase().indexOf(queryString.toLowerCase())))
 					continue;
 				task._id=p;
 				var col;
