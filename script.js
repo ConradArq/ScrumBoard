@@ -3,16 +3,25 @@ var Task=function(description,personName,hours){
 	this.personName=personName;
 	this.hours=hours;
 }
+Task.prototype.toString=function(){
+	return "Description: "+this.description+", Assigned to: "+this.personName+", Estimated hours: "+this.hours+", Hours spent on the task: "+(this.hoursSpent||0)+", Percentage of the task completed: "+(this.percentageCompleted||0)+", Difference between estimated hours and hours spent: "+(this.hoursDiff||0);
+}
+
 var TaskStarted=function(description,personName,hours,percentageCompleted,hoursSpent){
 	Task.call(this,description,personName,hours);
 	this.percentageCompleted=percentageCompleted;
 	this.hoursSpent=hoursSpent;
 }
+TaskStarted.prototype=Object.create(Task.prototype);
+TaskStarted.prototype.constructor=TaskStarted;
 var TaskFinished=function(description,personName,hours,hoursSpent){
 	Task.call(this,description,personName,hours);
 	this.hoursSpent=hoursSpent;
 	this.hoursDiff=this.hoursSpent-this.hours;
 }
+TaskFinished.prototype=Object.create(Task.prototype);
+TaskFinished.prototype.constructor=TaskFinished;
+
 var tasksNotStarted=[];
 var tasksStarted=[];
 var tasksFinished=[];
@@ -45,7 +54,7 @@ function displayTask(task,col,nTasks){
 	else
 	    childIndex=elem.children().get().length;
 
-	var htmlString='<div class="col-sm-2" draggable="true"><div class="description"><span>'+task.description+' </span><span class="glyphicon glyphicon-pencil" onclick="editTask(this,'+childIndex+','+col+')"></span></div><div class="personName">Assigned to: <span>'+task.personName+'</span></div><div class="hours">Estimated hours: <span>'+task.hours+'</span></div>';
+	var htmlString='<div class="col-sm-2" draggable="true"><div class="description"><span>'+task.description+'</span>&nbsp;<span class="glyphicon glyphicon-pencil" onclick="editTask(this,'+childIndex+','+col+')"></span></div><div class="personName">Assigned to: <span>'+task.personName+'</span></div><div class="hours">Estimated hours: <span>'+task.hours+'</span></div>';
 	if(col==2)
 		htmlString+='<div class="hoursSpent">Hours spent: <span>'+task.hoursSpent+'</span></div>'+'<div class="progress"><div class="progress-bar progress-bar-striped active percentageCompleted" role="progressbar" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100" style="width:'+task.percentageCompleted+'%"><span>'+task.percentageCompleted+'<span>%</span></span></div></div>';
 	if(col==3)
@@ -179,7 +188,6 @@ function addTask(col){
 			newTask=new TaskStarted(taskDescription,taskPersonName,taskHours,taskPercentageCompleted||0,taskHoursSpent||0);
 		if(col==3)
 			newTask=new TaskFinished(taskDescription,taskPersonName,taskHours,taskHoursSpent);
-
 	}
 	function callback(response){
 
@@ -210,8 +218,6 @@ function removeTask(event){
 			tasksStarted.splice(i,1);
 		if(col==3)
 			tasksFinished.splice(i,1);
-		console.log(tasksStarted);
-		console.log(tasksFinished);
 		$('.tbody .col-sm-4:nth-child('+col+')').children(':nth-child('+(parseInt(i)+1)+')').fadeOut(function(){
 			$('.tbody .col-sm-4:nth-child('+col+')').children(':nth-child('+(parseInt(i)+1)+')').remove();
 
